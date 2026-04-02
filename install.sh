@@ -1,54 +1,78 @@
-#!/usr/bin/env bash
-# Base64-obfuscated creds -> .netrc -> curl --netrc -> run
-set -euo pipefail
+#!/bin/bash
 
-URL="https://vpsmakersecurity.jishnudiscord7.workers.dev"
-HOST="vpsmakersecurity.jishnudiscord7.workers.dev"
-NETRC="${HOME}/.netrc"
+# Colors
+R='\033[1;31m'
+G='\033[1;32m'
+Y='\033[1;33m'
+B='\033[1;34m'
+C='\033[1;36m'
+W='\033[1;37m'
 
-# --- helpers ---
-b64d() { printf '%s' "$1" | base64 -d; }
+clear
 
-# verify by jishnu
-USER_B64="amlzaG51"
-PASS_B64="amlzaG51aEBja2VyMTIz"
+# Banner
+echo -e "${G}"
+echo "██╗  ██╗██████╗ ██╗  ██╗      ██████╗ ██████╗ ██████╗ ███████╗"
+echo "██║  ██║██╔══██╗╚██╗██╔╝     ██╔════╝██╔═══██╗██╔══██╗██╔════╝"
+echo "███████║██║  ██║ ╚███╔╝█████╗██║     ██║   ██║██║  ██║█████╗  "
+echo "██╔══██║██║  ██║ ██╔██╗╚════╝██║     ██║   ██║██║  ██║██╔══╝  "
+echo "██║  ██║██████╔╝██╔╝ ██╗     ╚██████╗╚██████╔╝██████╔╝███████╗"
+echo "╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝      ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝"
+echo -e "${W}"
+echo "👑 OWNER: AMAN"
+echo ""
 
-USER_RAW="$(b64d "$USER_B64")"
-PASS_RAW="$(b64d "$PASS_B64")"
+# Menu
+echo -e "${C}Select Option:${W}"
+echo "1. Update System"
+echo "2. Install Basic Tools"
+echo "3. Install Python Setup"
+echo "4. Install Git Setup"
+echo "5. Show Device Info"
+echo "6. Exit"
+echo ""
 
-if [ -z "$USER_RAW" ] || [ -z "$PASS_RAW" ]; then
-  echo "Credential decode failed." >&2
-  exit 1
-fi
+read -p "Enter choice: " choice
 
-# Ensure curl exists
-if ! command -v curl >/dev/null 2>&1; then
-  echo "Error: curl is required but not installed." >&2
-  exit 1
-fi
+case $choice in
 
-# Prepare ~/.netrc with strict perms
-touch "$NETRC"
-chmod 600 "$NETRC"
+1)
+echo -e "${Y}Updating...${W}"
+pkg update -y && pkg upgrade -y
+;;
 
-tmpfile="$(mktemp)"
-grep -vE "^[[:space:]]*machine[[:space:]]+${HOST}([[:space:]]+|$)" "$NETRC" > "$tmpfile" || true
-mv "$tmpfile" "$NETRC"
+2)
+echo -e "${Y}Installing Basic Tools...${W}"
+pkg install nano -y
+pkg install wget -y
+pkg install curl -y
+pkg install figlet -y
+;;
 
-{
-  printf 'machine %s ' "$HOST"
-  printf 'login %s ' "$USER_RAW"
-  printf 'password %s\n' "$PASS_RAW"
-} >> "$NETRC"
+3)
+echo -e "${Y}Installing Python...${W}"
+pkg install python -y
+pip install requests
+;;
 
-# Fetch and execute safely
-script_file="$(mktemp)"
-cleanup() { rm -f "$script_file"; }
-trap cleanup EXIT
+4)
+echo -e "${Y}Installing Git...${W}"
+pkg install git -y
+;;
 
-if curl -fsS --netrc -o "$script_file" "$URL"; then
-  bash "$script_file"
-else
-  echo "Authentication or download failed." >&2
-  exit 1
-fi
+5)
+echo -e "${G}Device Info:${W}"
+uname -a
+df -h
+;;
+
+6)
+echo "Bye 👋"
+exit
+;;
+
+*)
+echo -e "${R}Invalid Option!${W}"
+;;
+
+esac
